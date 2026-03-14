@@ -5,8 +5,10 @@ import com.logiflow.api.LogiFlow.dto.RouteResponseDTO;
 import com.logiflow.api.LogiFlow.dto.ShipmentResponseDTO;
 import com.logiflow.api.LogiFlow.model.Shipment;
 import com.logiflow.api.LogiFlow.repository.ShipmentRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -22,24 +24,23 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class ShipmentService {
 
-    @Autowired
-    private RestTemplate restTemplate;
-
-    @Autowired
-    private ShipmentRepository repository;
+    private final RestTemplate restTemplate;
+    private final ShipmentRepository repository;
 
     private static final Double FATOR_CUBAGEM = 300.0;
 
-    private double[] geocodificarCidade(String cidade) {
+    private double[] geocodificarCidade(String cidade, String estado) {
         if (cidade == null || cidade.isBlank()) {
             log.warn("Nome de cidade inválido para geocodificação.");
             return null;
         }
         try {
-            String cidadeCodificada = UriUtils.encodeQueryParam(cidade, StandardCharsets.UTF_8);
-            String url = "https://nominatim.openstreetmap.org/search?q=" + cidadeCodificada + "&format=json&limit=1&countrycodes=br";
+            String query = (estado != null && !estado.isBlank()) ? cidade + ", " + estado : cidade;
+            String queryCodificada = UriUtils.encodeQueryParam(query, StandardCharsets.UTF_8);
+            String url = "https://nominatim.openstreetmap.org/search?q=" + queryCodificada + "&format=json&limit=1&countrycodes=br";
 
             HttpHeaders headers = new HttpHeaders();
             headers.set("User-Agent", "LogiFlow/1.0");
@@ -59,34 +60,36 @@ public class ShipmentService {
     }
 
     public Shipment processarNovoEnvio(Shipment shipment) {
+        if (shipment.getWeight() == null || shipment.getWeight() <= 0) {
+            throw new IllegalArgumentException("Peso deve ser maior que zero");
+        }
+
         shipment.setTrackingCode("LF-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         log.info("Processando novo envio com tracking code: {}", shipment.getTrackingCode());
 
-        double[] origem = geocodificarCidade(shipment.getOriginCity());
-        double[] destino = geocodificarCidade(shipment.getDestinationCity());
+        double[] origem = geocodificarCidade(shipment.getOriginCity(), shipment.getOriginState());
+        double[] destino = geocodificarCidade(shipment.getDestinationCity(), shipment.getDestinationState());
 
-        String url;
         if (origem != null && destino != null) {
-            url = String.format("http://router.project-osrm.org/route/v1/driving/%f,%f;%f,%f?overview=false",
+            String url = String.format("http://router.project-osrm.org/route/v1/driving/%f,%f;%f,%f?overview=false",
                     origem[1], origem[0], destino[1], destino[0]);
-        } else {
-            log.warn("Não foi possível geocodificar as cidades. Usando coordenadas padrão.");
-            url = "http://router.project-osrm.org/route/v1/driving/-51.09,-29.94;-51.21,-30.03?overview=false";
-        }
-        log.info("Consultando rota na API OSRM: {}", url);
-
-        try {
-            RouteResponseDTO response = restTemplate.getForObject(url, RouteResponseDTO.class);
-            if (response != null && response.getRoutes() != null && !response.getRoutes().isEmpty()) {
-                Double distanciaMetros = response.getRoutes().get(0).getDistance();
-                shipment.setDistanceKm(distanciaMetros / 1000.0);
-                log.info("Distância calculada pela API: {} km", shipment.getDistanceKm());
-            } else {
-                log.warn("API OSRM retornou resposta vazia. Usando distância padrão: 20 km");
+            log.info("Consultando rota na API OSRM: {}", url);
+            try {
+                RouteResponseDTO response = restTemplate.getForObject(url, RouteResponseDTO.class);
+                if (response != null && response.getRoutes() != null && !response.getRoutes().isEmpty()) {
+                    Double distanciaMetros = response.getRoutes().get(0).getDistance();
+                    shipment.setDistanceKm(distanciaMetros / 1000.0);
+                    log.info("Distância calculada pela API: {} km", shipment.getDistanceKm());
+                } else {
+                    log.warn("API OSRM retornou resposta vazia. Usando distância padrão: 20 km");
+                    shipment.setDistanceKm(20.0);
+                }
+            } catch (Exception e) {
+                log.error("Erro ao consultar API OSRM: {}. Usando distância padrão: 20 km", e.getMessage());
                 shipment.setDistanceKm(20.0);
             }
-        } catch (Exception e) {
-            log.error("Erro ao consultar API OSRM: {}. Usando distância padrão: 20 km", e.getMessage());
+        } else {
+            log.warn("Não foi possível geocodificar as cidades. Usando distância padrão: 20 km");
             shipment.setDistanceKm(20.0);
         }
 
@@ -103,8 +106,8 @@ public class ShipmentService {
         return repository.save(shipment);
     }
 
-    public List<Shipment> buscarTodos() {
-        return repository.findAll();
+    public Page<ShipmentResponseDTO> buscarTodos(Pageable pageable) {
+        return repository.findAll(pageable).map(ShipmentResponseDTO::new);
     }
 
     public List<ShipmentResponseDTO> buscarUltimos10() {

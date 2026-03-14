@@ -79,4 +79,70 @@ public class ShipmentServiceTest {
         Assertions.assertEquals(new BigDecimal("1488.75"), resultado.getFreightValue().setScale(2, java.math.RoundingMode.HALF_UP));
         Assertions.assertEquals(1100.0, resultado.getDistanceKm());
     }
+
+    @Test
+    public void deveLancarExcecaoQuandoPesoNegativo() {
+        Shipment shipment = new Shipment();
+        shipment.setWeight(-1.0);
+        shipment.setLength(50.0);
+        shipment.setWidth(50.0);
+        shipment.setHeight(50.0);
+        shipment.setOriginCity("Porto Alegre");
+        shipment.setDestinationCity("São Paulo");
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> service.processarNovoEnvio(shipment));
+    }
+
+    @Test
+    public void deveUsarDistanciaPadraoQuandoOSRMFalhar() {
+        Shipment shipment = new Shipment();
+        shipment.setWeight(10.0);
+        shipment.setLength(50.0);
+        shipment.setWidth(50.0);
+        shipment.setHeight(50.0);
+        shipment.setOriginCity("Porto Alegre");
+        shipment.setDestinationCity("São Paulo");
+
+        NominatimResponseDTO coordOrigem = new NominatimResponseDTO();
+        coordOrigem.setLat("-30.0277");
+        coordOrigem.setLon("-51.2287");
+
+        NominatimResponseDTO coordDestino = new NominatimResponseDTO();
+        coordDestino.setLat("-23.5505");
+        coordDestino.setLon("-46.6333");
+
+        when(restTemplate.exchange(contains("Porto%20Alegre"), any(), any(), eq(NominatimResponseDTO[].class)))
+                .thenReturn(ResponseEntity.ok(new NominatimResponseDTO[]{coordOrigem}));
+        when(restTemplate.exchange(contains("S%C3%A3o%20Paulo"), any(), any(), eq(NominatimResponseDTO[].class)))
+                .thenReturn(ResponseEntity.ok(new NominatimResponseDTO[]{coordDestino}));
+
+        when(restTemplate.getForObject(contains("osrm"), eq(RouteResponseDTO.class)))
+                .thenThrow(new RuntimeException("OSRM indisponível"));
+
+        when(repository.save(any(Shipment.class))).thenAnswer(i -> i.getArgument(0));
+
+        Shipment resultado = service.processarNovoEnvio(shipment);
+
+        Assertions.assertEquals(20.0, resultado.getDistanceKm());
+    }
+
+    @Test
+    public void deveUsarDistanciaPadraoQuandoCidadeNaoEncontrada() {
+        Shipment shipment = new Shipment();
+        shipment.setWeight(10.0);
+        shipment.setLength(50.0);
+        shipment.setWidth(50.0);
+        shipment.setHeight(50.0);
+        shipment.setOriginCity("CidadeInexistente");
+        shipment.setDestinationCity("OutraCidadeInexistente");
+
+        when(restTemplate.exchange(any(String.class), any(), any(), eq(NominatimResponseDTO[].class)))
+                .thenReturn(ResponseEntity.ok(new NominatimResponseDTO[]{}));
+
+        when(repository.save(any(Shipment.class))).thenAnswer(i -> i.getArgument(0));
+
+        Shipment resultado = service.processarNovoEnvio(shipment);
+
+        Assertions.assertEquals(20.0, resultado.getDistanceKm());
+    }
 }

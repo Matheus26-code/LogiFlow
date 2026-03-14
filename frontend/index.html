@@ -15,13 +15,73 @@
 
     <form id="freightForm" class="space-y-4">
         <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Origem</label>
-                <input type="text" id="origin" value="Cachoeirinha" class="w-full bg-slate-700 border-none rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none">
+            <div class="space-y-2">
+                <label class="block text-xs uppercase font-bold text-slate-400">Origem</label>
+                <input type="text" id="origin" placeholder="Cidade" class="w-full bg-slate-700 border-none rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none">
+                <select id="originState" class="w-full bg-slate-700 border-none rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    <option value="">Selecione o estado</option>
+                    <option value="Acre">AC - Acre</option>
+                    <option value="Alagoas">AL - Alagoas</option>
+                    <option value="Amapá">AP - Amapá</option>
+                    <option value="Amazonas">AM - Amazonas</option>
+                    <option value="Bahia">BA - Bahia</option>
+                    <option value="Ceará">CE - Ceará</option>
+                    <option value="Distrito Federal">DF - Distrito Federal</option>
+                    <option value="Espírito Santo">ES - Espírito Santo</option>
+                    <option value="Goiás">GO - Goiás</option>
+                    <option value="Maranhão">MA - Maranhão</option>
+                    <option value="Mato Grosso">MT - Mato Grosso</option>
+                    <option value="Mato Grosso do Sul">MS - Mato Grosso do Sul</option>
+                    <option value="Minas Gerais">MG - Minas Gerais</option>
+                    <option value="Pará">PA - Pará</option>
+                    <option value="Paraíba">PB - Paraíba</option>
+                    <option value="Paraná">PR - Paraná</option>
+                    <option value="Pernambuco">PE - Pernambuco</option>
+                    <option value="Piauí">PI - Piauí</option>
+                    <option value="Rio de Janeiro">RJ - Rio de Janeiro</option>
+                    <option value="Rio Grande do Norte">RN - Rio Grande do Norte</option>
+                    <option value="Rio Grande do Sul">RS - Rio Grande do Sul</option>
+                    <option value="Rondônia">RO - Rondônia</option>
+                    <option value="Roraima">RR - Roraima</option>
+                    <option value="Santa Catarina">SC - Santa Catarina</option>
+                    <option value="São Paulo">SP - São Paulo</option>
+                    <option value="Sergipe">SE - Sergipe</option>
+                    <option value="Tocantins">TO - Tocantins</option>
+                </select>
             </div>
-            <div>
-                <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Destino</label>
-                <input type="text" id="destination" placeholder="Ex: Porto Alegre" class="w-full bg-slate-700 border-none rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none">
+            <div class="space-y-2">
+                <label class="block text-xs uppercase font-bold text-slate-400">Destino</label>
+                <input type="text" id="destination" placeholder="Cidade" class="w-full bg-slate-700 border-none rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none">
+                <select id="destinationState" class="w-full bg-slate-700 border-none rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                    <option value="">Selecione o estado</option>
+                    <option value="Acre">AC - Acre</option>
+                    <option value="Alagoas">AL - Alagoas</option>
+                    <option value="Amapá">AP - Amapá</option>
+                    <option value="Amazonas">AM - Amazonas</option>
+                    <option value="Bahia">BA - Bahia</option>
+                    <option value="Ceará">CE - Ceará</option>
+                    <option value="Distrito Federal">DF - Distrito Federal</option>
+                    <option value="Espírito Santo">ES - Espírito Santo</option>
+                    <option value="Goiás">GO - Goiás</option>
+                    <option value="Maranhão">MA - Maranhão</option>
+                    <option value="Mato Grosso">MT - Mato Grosso</option>
+                    <option value="Mato Grosso do Sul">MS - Mato Grosso do Sul</option>
+                    <option value="Minas Gerais">MG - Minas Gerais</option>
+                    <option value="Pará">PA - Pará</option>
+                    <option value="Paraíba">PB - Paraíba</option>
+                    <option value="Paraná">PR - Paraná</option>
+                    <option value="Pernambuco">PE - Pernambuco</option>
+                    <option value="Piauí">PI - Piauí</option>
+                    <option value="Rio de Janeiro">RJ - Rio de Janeiro</option>
+                    <option value="Rio Grande do Norte">RN - Rio Grande do Norte</option>
+                    <option value="Rio Grande do Sul">RS - Rio Grande do Sul</option>
+                    <option value="Rondônia">RO - Rondônia</option>
+                    <option value="Roraima">RR - Roraima</option>
+                    <option value="Santa Catarina">SC - Santa Catarina</option>
+                    <option value="São Paulo">SP - São Paulo</option>
+                    <option value="Sergipe">SE - Sergipe</option>
+                    <option value="Tocantins">TO - Tocantins</option>
+                </select>
             </div>
         </div>
 
@@ -41,12 +101,12 @@
         </button>
     </form>
 
-    <div id="result" class="hidden mt-8 p-4 bg-slate-700 rounded-xl border-l-4 border-blue-500 animate-pulse">
+    <div id="result" class="hidden mt-8 p-4 bg-slate-700 rounded-xl border-l-4 border-blue-500">
         <p class="text-sm text-slate-300">Valor Estimado:</p>
         <h2 id="finalValue" class="text-4xl font-black text-white">R$ 0,00</h2>
         <p id="dist" class="text-xs text-blue-300 mt-2 italic"></p>
     </div>
-    <div class="overflow-x-auto">
+    <div class="overflow-x-auto mt-6">
         <table class="w-full text-left text-sm">
             <thead>
             <tr class="text-slate-400 border-b border-slate-700">
@@ -66,11 +126,23 @@
     form.onsubmit = async (e) => {
         e.preventDefault();
         const btn = e.target.querySelector('button');
+
+        const originState = document.getElementById('originState').value;
+        const destinationState = document.getElementById('destinationState').value;
+
+        if (!originState || !destinationState) {
+            alert('Selecione o estado de origem e destino.');
+            return;
+        }
+
         btn.innerText = 'Calculando...';
+        btn.disabled = true;
 
         const data = {
             originCity: document.getElementById('origin').value,
+            originState: originState,
             destinationCity: document.getElementById('destination').value,
+            destinationState: destinationState,
             weight: parseFloat(document.getElementById('weight').value),
             length: parseFloat(document.getElementById('length').value),
             width: parseFloat(document.getElementById('width').value),
@@ -78,7 +150,7 @@
         };
 
         try {
-            const res = await fetch('https://logiflow-production-6e21.up.railway.app/api/shipments', {
+            const res = await fetch('/api/shipments', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
@@ -88,27 +160,30 @@
             document.getElementById('result').classList.remove('hidden');
             document.getElementById('finalValue').innerText = `R$ ${result.freightValue.toFixed(2)}`;
             document.getElementById('dist').innerText = `Distância calculada: ${result.distanceKm.toFixed(2)} km`;
+            carregarHistorico();
         } catch (err) {
             alert('Erro ao conectar com a API!');
         } finally {
             btn.innerText = 'Calcular Frete';
+            btn.disabled = false;
         }
     };
+
     async function carregarHistorico() {
-    try {
-        const res = await fetch('https://logiflow-production-6e21.up.railway.app/api/shipments/recent');
-        const dados = await res.json();
-        const html = dados.map(item => `
-            <tr class="border-b border-slate-700/50">
-                <td class="py-2 font-mono text-blue-300">${item.trackingCode}</td>
-                <td class="py-2">${item.destinationCity}</td>
-                <td class="py-2 font-bold text-green-400">R$ ${item.freightValue.toFixed(2)}</td>
-            </tr>
-        `).join('');
-        document.getElementById('historyTable').innerHTML = html;
-    } catch (e) { console.error("Erro ao carregar histórico"); }
-}
-carregarHistorico();
+        try {
+            const res = await fetch('/api/shipments/recent');
+            const dados = await res.json();
+            const html = dados.map(item => `
+                <tr class="border-b border-slate-700/50">
+                    <td class="py-2 font-mono text-blue-300">${item.trackingCode}</td>
+                    <td class="py-2">${item.destinationCity}</td>
+                    <td class="py-2 font-bold text-green-400">R$ ${item.freightValue.toFixed(2)}</td>
+                </tr>
+            `).join('');
+            document.getElementById('historyTable').innerHTML = html;
+        } catch (e) { console.error("Erro ao carregar histórico"); }
+    }
+    carregarHistorico();
 </script>
 </body>
 </html>
