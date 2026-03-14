@@ -31,6 +31,18 @@ public class ShipmentService {
     private final ShipmentRepository repository;
 
     private static final Double FATOR_CUBAGEM = 300.0;
+    private static final double RAIO_TERRA_KM = 6371.0;
+    private static final double FATOR_ROTA = 1.4; // rota real ≈ 40% maior que linha reta
+
+    private double calcularDistanciaHaversine(double[] origem, double[] destino) {
+        double dLat = Math.toRadians(destino[0] - origem[0]);
+        double dLon = Math.toRadians(destino[1] - origem[1]);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(origem[0])) * Math.cos(Math.toRadians(destino[0]))
+                * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        double distanciaLinhReta = 2 * RAIO_TERRA_KM * Math.asin(Math.sqrt(a));
+        return distanciaLinhReta * FATOR_ROTA;
+    }
 
     private double[] geocodificarCidade(String cidade, String estado) {
         if (cidade == null || cidade.isBlank()) {
@@ -79,14 +91,16 @@ public class ShipmentService {
                 if (response != null && response.getRoutes() != null && !response.getRoutes().isEmpty()) {
                     Double distanciaMetros = response.getRoutes().get(0).getDistance();
                     shipment.setDistanceKm(distanciaMetros / 1000.0);
-                    log.info("Distância calculada pela API: {} km", shipment.getDistanceKm());
+                    log.info("Distância calculada pela API OSRM: {} km", shipment.getDistanceKm());
                 } else {
-                    log.warn("API OSRM retornou resposta vazia. Usando distância padrão: 20 km");
-                    shipment.setDistanceKm(20.0);
+                    double distancia = calcularDistanciaHaversine(origem, destino);
+                    shipment.setDistanceKm(distancia);
+                    log.warn("API OSRM sem resposta. Usando Haversine: {} km", String.format("%.2f", distancia));
                 }
             } catch (Exception e) {
-                log.error("Erro ao consultar API OSRM: {}. Usando distância padrão: 20 km", e.getMessage());
-                shipment.setDistanceKm(20.0);
+                double distancia = calcularDistanciaHaversine(origem, destino);
+                shipment.setDistanceKm(distancia);
+                log.error("Erro OSRM: {}. Usando Haversine: {} km", e.getMessage(), String.format("%.2f", distancia));
             }
         } else {
             log.warn("Não foi possível geocodificar as cidades. Usando distância padrão: 20 km");

@@ -123,7 +123,9 @@ public class ShipmentServiceTest {
 
         Shipment resultado = service.processarNovoEnvio(shipment);
 
-        Assertions.assertEquals(20.0, resultado.getDistanceKm());
+        // OSRM falhou mas coordenadas existem → usa Haversine (POA→SP ≈ 1100-1300 km estimado)
+        Assertions.assertTrue(resultado.getDistanceKm() > 1000.0,
+                "Esperado distância Haversine > 1000 km, mas foi: " + resultado.getDistanceKm());
     }
 
     @Test
