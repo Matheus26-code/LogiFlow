@@ -1,0 +1,38 @@
+services:
+  logiflow_db:
+    image: postgres:latest
+    container_name: logiflow_db_container
+    environment:
+      POSTGRES_DB: logiflow_db
+      POSTGRES_USER: igor_dev
+      POSTGRES_PASSWORD: xa695FzKTQ6uPPU#
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - logiflow_network
+
+  logiflow_app:
+    build: .
+    container_name: logiflow_app_container
+    ports:
+      - "8080:8080"
+    environment:
+      PGHOST: logiflow_db
+      PGPORT: 5432
+      PGDATABASE: logiflow_db
+      PGUSER: igor_dev
+      PGPASSWORD: xa695FzKTQ6uPPU#
+      SPRING_PROFILES_ACTIVE: prod
+    depends_on:
+      - logiflow_db
+    networks:
+      - logiflow_network
+
+networks:
+  logiflow_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
